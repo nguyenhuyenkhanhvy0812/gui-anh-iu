@@ -101,6 +101,18 @@ h1,h2{font-weight:800;line-height:1.1;margin:0 0 8px;color:var(--cherry)}
 .letter .stamp{position:absolute;top:10px;right:12px;font-size:1.6rem;transform:rotate(10deg);opacity:.9}
 .letter .big{font-weight:600;color:var(--cherry)}
 .hint{font-family:var(--note);margin:10px 0 0}
+/* hiệu ứng nụ hôn: môi KHỔNG LỒ che màn hình -> tim khổng lồ -> tim nhỏ tỏa ra
+   (muốn nhỏ lại thì giảm 120vmax xuống, ví dụ 80vmax) */
+.kl{position:fixed;left:50%;top:50%;pointer-events:none;z-index:100;line-height:1;transform:translate(-50%,-50%)}
+.lips,.bigheart{font-size:120vmax}
+.lips{animation:smooch 1s ease-in-out forwards}
+@keyframes smooch{0%{transform:translate(-50%,-50%) scale(.1) rotate(-25deg);opacity:0}30%{transform:translate(-50%,-50%) scale(.9) rotate(-6deg);opacity:1}45%{transform:translate(-50%,-50%) scale(.7) rotate(0)}60%{transform:translate(-50%,-50%) scale(1) rotate(0);opacity:1}100%{transform:translate(-50%,-50%) scale(1.1);opacity:0}}
+.mwah{z-index:101;font-family:var(--hand);font-size:clamp(2.2rem,12vw,5rem);color:#fff;white-space:nowrap;text-shadow:0 3px 0 var(--cherry),0 0 18px var(--cherry);animation:mw 1s forwards}
+@keyframes mw{0%,25%{transform:translate(-50%,-50%) scale(.3);opacity:0}45%{transform:translate(-50%,-50%) scale(1.1);opacity:1}100%{transform:translate(-50%,-50%) scale(1.2);opacity:0}}
+.bigheart{animation:bigh 1.8s ease-out forwards}
+@keyframes bigh{0%{transform:translate(-50%,-50%) scale(.1);opacity:0}25%{transform:translate(-50%,-50%) scale(1);opacity:1}70%{transform:translate(-50%,-50%) scale(.95);opacity:1}100%{transform:translate(-50%,-50%) scale(1.15);opacity:0}}
+.mbtn{display:none;position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:50;width:46px;height:46px;border-radius:50%;border:3px solid #fff;background:var(--cherry);color:#fff;font-size:20px;box-shadow:0 4px 12px #a3122f66;padding:0}
+.mbtn.show{display:block}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition-duration:.01s!important}}
 </style>
 </head>
@@ -117,6 +129,9 @@ h1,h2{font-weight:800;line-height:1.1;margin:0 0 8px;color:var(--cherry)}
 </symbol></svg>
 
 <div id="bg"></div>
+<!-- NHẠC: bỏ file mp3 vào thư mục music/ và đặt tên diep-khuc.mp3 (có thể chỉnh giây bắt đầu/độ dài ở phần NHẠC trong code bên dưới) -->
+<audio id="song" src="music/diep-khuc.mp3" preload="metadata"></audio>
+<button class="mbtn" id="musicBtn" aria-label="Bật/tắt nhạc">🔊</button>
 
 <!-- ============ MÀN HÌNH MỞ ĐẦU ============ -->
 <section class="screen on" id="intro" aria-label="Mở đầu">
@@ -203,7 +218,7 @@ h1,h2{font-weight:800;line-height:1.1;margin:0 0 8px;color:var(--cherry)}
    <p>Chúc anh iu của em luôn vui vẻ, khỏe mạnh, gặp nhiều may mắn, và em là điều may mắn cụa anh nè Hihi! 💋</p>
    <p class="big">YÊU ANH NHIỀU ƠI LÀ NHIỀU! 💗</p>
    <p class="sg">Ký tên: Bé iu của anh 🎀</p>
-   <div style="text-align:center;margin-top:22px"><button class="btn" id="hugBtn">Gửi anh một cái ôm 💗</button></div>
+   <div style="text-align:center;margin-top:22px"><button class="btn" id="kissBtn">Gửi anh 1 nụ hôn 💋</button></div>
   </article>
  </div>
 </section>
@@ -237,7 +252,7 @@ document.addEventListener('pointerdown',e=>{if(e.target.closest('.stk,.pol,.fh,.
 let hugTimer;
 function go(id){
  $$('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
- $('#'+id).scrollTop=0; clearInterval(hugTimer);
+ $('#'+id).scrollTop=0; clearInterval(hugTimer); if(typeof stopSong==='function')stopSong();
  if(id==='v1') hugTimer=setInterval(()=>{const x=innerWidth*(.1+Math.random()*.8);burst(x,innerHeight*.95,1)},450);
  if(id==='v3') resetMail();
 }
@@ -255,7 +270,35 @@ function openMail(){const env=$('#env3');if(env.classList.contains('open'))retur
 function resetMail(){$('#env3').classList.remove('open');$('#mailWrap').style.display='';$('#letter').classList.remove('show')}
 $('#env3').addEventListener('click',openMail);
 $('#env3').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openMail()}});
-$('#hugBtn').addEventListener('click',e=>{const r=e.target.getBoundingClientRect();burst(r.left+r.width/2,r.top,18);setTimeout(()=>burst(r.left+r.width/2,r.top,12),250)});
+// Nút "Gửi anh 1 nụ hôn": môi hiện ra hôn 1 cái -> tim lớn bay ra giữa màn hình -> tim nhỏ tỏa xung quanh
+function kiss(){
+ const lips=document.createElement('div');lips.className='kl lips';lips.textContent='💋';
+ const mw=document.createElement('div');mw.className='kl mwah';mw.textContent='chụt~';
+ document.body.append(lips,mw);
+ setTimeout(()=>{lips.remove();mw.remove();
+  const big=document.createElement('div');big.className='kl bigheart';big.textContent='💗';document.body.appendChild(big);
+  setTimeout(()=>big.remove(),1800);
+  const cx=innerWidth/2,cy=innerHeight/2,n=18;
+  for(let i=0;i<n;i++){const a=i/n*Math.PI*2,r=Math.max(innerWidth,innerHeight)*(.35+Math.random()*.3),s=document.createElement('span');s.className='pop';s.textContent=['💗','🩷','💕','💖'][i%4];
+   s.style.left=cx+'px';s.style.top=cy+'px';s.style.fontSize=30+Math.random()*30+'px';
+   s.style.setProperty('--dx',Math.cos(a)*r+'px');s.style.setProperty('--dy',Math.sin(a)*r+'px');s.style.setProperty('--rot',(Math.random()-.5)*60+'deg');
+   s.addEventListener('animationend',()=>s.remove());document.body.appendChild(s)}
+ },850);
+}
+// ===== NHẠC (phát cùng lúc bấm nút hôn) =====
+const SONG_START=0;   // giây bắt đầu phát. Nếu file đã cắt sẵn đúng điệp khúc thì để 0; nếu là cả bài thì điền giây điệp khúc bắt đầu (vd 95)
+const SONG_LEN=30;    // phát bao nhiêu giây thì tự nhỏ dần rồi dừng
+const song=$('#song'), mbtn=$('#musicBtn'); let songTimer;
+function stopSong(){clearInterval(songTimer);song.pause();song.volume=1;mbtn.classList.remove('show')}
+function playSong(){
+ clearInterval(songTimer);song.volume=1;
+ const p=song.play();                      // phải gọi ngay lúc bấm để điện thoại cho phép phát
+ if(SONG_START>0){if(song.readyState>=1)song.currentTime=SONG_START;else song.addEventListener('loadedmetadata',()=>{song.currentTime=SONG_START},{once:true})}
+ if(p&&p.then)p.then(()=>{mbtn.textContent='🔊';mbtn.classList.add('show');
+  songTimer=setInterval(()=>{const t=song.currentTime-SONG_START;if(t>=SONG_LEN-3)song.volume=Math.max(0,(SONG_LEN-t)/3);if(t>=SONG_LEN||song.ended)stopSong()},200)}).catch(()=>{}); // chưa có file nhạc thì bỏ qua, web vẫn chạy
+}
+mbtn.addEventListener('click',()=>{if(song.paused){song.play();mbtn.textContent='🔊'}else{song.pause();mbtn.textContent='🔇'}});
+$('#kissBtn').addEventListener('click',e=>{const b=e.currentTarget;b.disabled=true;kiss();playSong();setTimeout(()=>b.disabled=false,2800)});
 </script>
 </body>
 </html>
