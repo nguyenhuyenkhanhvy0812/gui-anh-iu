@@ -113,6 +113,7 @@ h1,h2{font-weight:800;line-height:1.1;margin:0 0 8px;color:var(--cherry)}
 @keyframes bigh{0%{transform:translate(-50%,-50%) scale(.1);opacity:0}25%{transform:translate(-50%,-50%) scale(1);opacity:1}70%{transform:translate(-50%,-50%) scale(.95);opacity:1}100%{transform:translate(-50%,-50%) scale(1.15);opacity:0}}
 .mbtn{display:none;position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:50;width:46px;height:46px;border-radius:50%;border:3px solid #fff;background:var(--cherry);color:#fff;font-size:20px;box-shadow:0 4px 12px #a3122f66;padding:0}
 .mbtn.show{display:block}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 74px);transform:translateX(-50%);z-index:120;background:#fff;color:var(--cherry);border:2px solid var(--pink);border-radius:18px;padding:8px 16px;font-weight:700;font-size:.9rem;box-shadow:0 6px 16px #a3122f33;text-align:center;max-width:88vw}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition-duration:.01s!important}}
 </style>
 </head>
@@ -289,13 +290,14 @@ function kiss(){
 const SONG_START=0;   // giây bắt đầu phát. Nếu file đã cắt sẵn đúng điệp khúc thì để 0; nếu là cả bài thì điền giây điệp khúc bắt đầu (vd 95)
 const SONG_LEN=30;    // phát bao nhiêu giây thì tự nhỏ dần rồi dừng
 const song=$('#song'), mbtn=$('#musicBtn'); let songTimer;
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),6000)}
 function stopSong(){clearInterval(songTimer);song.pause();song.volume=1;mbtn.classList.remove('show')}
 function playSong(){
  clearInterval(songTimer);song.volume=1;
  const p=song.play();                      // phải gọi ngay lúc bấm để điện thoại cho phép phát
  if(SONG_START>0){if(song.readyState>=1)song.currentTime=SONG_START;else song.addEventListener('loadedmetadata',()=>{song.currentTime=SONG_START},{once:true})}
  if(p&&p.then)p.then(()=>{mbtn.textContent='🔊';mbtn.classList.add('show');
-  songTimer=setInterval(()=>{const t=song.currentTime-SONG_START;if(t>=SONG_LEN-3)song.volume=Math.max(0,(SONG_LEN-t)/3);if(t>=SONG_LEN||song.ended)stopSong()},200)}).catch(()=>{}); // chưa có file nhạc thì bỏ qua, web vẫn chạy
+  songTimer=setInterval(()=>{const t=song.currentTime-SONG_START;if(t>=SONG_LEN-3)song.volume=Math.max(0,(SONG_LEN-t)/3);if(t>=SONG_LEN||song.ended)stopSong()},200)}).catch(err=>{toast(err&&err.name==='NotAllowedError'?'Trình duyệt chưa cho phát nhạc, bấm nút hôn lại nha 💗':'Chưa phát được nhạc 🥺 (không tìm thấy music/diep-khuc.mp3 hoặc sai định dạng mp3)')}); // lỗi nhạc thì hiện thông báo nhỏ, web vẫn chạy
 }
 mbtn.addEventListener('click',()=>{if(song.paused){song.play();mbtn.textContent='🔊'}else{song.pause();mbtn.textContent='🔇'}});
 $('#kissBtn').addEventListener('click',e=>{const b=e.currentTarget;b.disabled=true;kiss();playSong();setTimeout(()=>b.disabled=false,2800)});
